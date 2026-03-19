@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test Viral para Amigos</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:linear-gradient(135deg,#ff4d4d,#ff884d);
+margin:0;
+text-align:center;
+}
+
+header{
+background:#111;
+color:white;
+padding:15px;
+font-size:22px;
+}
+
+.container{
+background:white;
+max-width:700px;
+margin:auto;
+margin-top:30px;
+padding:30px;
+border-radius:15px;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+.questionBox{
+display:flex;
+justify-content:center;
+align-items:center;
+gap:15px;
+}
+
+.arrow{
+font-size:28px;
+cursor:pointer;
+}
+
+input{
+width:85%;
+padding:12px;
+margin:8px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:12px 20px;
+background:#ff4d4d;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.scoreboard{
+margin-top:25px;
+text-align:left;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+🔥 Test Viral para Amigos
+</header>
+
+<div class="container" id="app">
+
+<h2>Crea tu test</h2>
+
+<input id="creator" placeholder="Tu nombre">
+
+<h3>Elige preguntas</h3>
+
+<div class="questionBox">
+
+<div class="arrow" onclick="prev()">⬅️</div>
+
+<p id="question"></p>
+
+<div class="arrow" onclick="next()">➡️</div>
+
+</div>
+
+<input id="r1">
+<input id="r2">
+<input id="r3">
+
+<button onclick="crear()">Crear test</button>
+
+<div id="link"></div>
+
+</div>
+
+<script>
+
+let preguntas=[
+
+{q:"¿Cuál es mi comida favorita?",r:["Pizza","Hamburguesa","Pasta"],c:0},
+{q:"¿Cuál es mi color favorito?",r:["Rojo","Azul","Negro"],c:1},
+{q:"¿Qué hago en mi tiempo libre?",r:["Jugar videojuegos","Salir","Ver series"],c:2},
+{q:"¿Cuál es mi videojuego favorito?",r:["Fortnite","Minecraft","FIFA"],c:1},
+{q:"¿Qué me gusta más?",r:["Dormir","Comer","Viajar"],c:2},
+{q:"¿Qué bebida prefiero?",r:["Agua","Refresco","Zumo"],c:1},
+{q:"¿Qué animal me gusta más?",r:["Perro","Gato","Lobo"],c:0},
+{q:"¿Cuál es mi estación favorita?",r:["Verano","Invierno","Primavera"],c:0},
+{q:"¿Qué música prefiero?",r:["Pop","Rap","Rock"],c:1},
+{q:"¿Qué haría si ganara dinero?",r:["Viajar","Comprar cosas","Ahorrar"],c:0}
+
+]
+
+let index=0
+
+function mostrar(){
+
+let q=preguntas[index]
+
+document.getElementById("question").innerText=q.q
+
+document.getElementById("r1").value=q.r[0]
+document.getElementById("r2").value=q.r[1]
+document.getElementById("r3").value=q.r[2]
+
+}
+
+function next(){
+index++
+if(index>=preguntas.length) index=0
+mostrar()
+}
+
+function prev(){
+index--
+if(index<0) index=preguntas.length-1
+mostrar()
+}
+
+mostrar()
+
+function crear(){
+
+let creador=document.getElementById("creator").value
+
+let data={
+creador:creador,
+preguntas:preguntas
+}
+
+let code=btoa(JSON.stringify(data))
+
+let link=location.origin+location.pathname+"?test="+code
+
+document.getElementById("link").innerHTML=
+
+"✅ Tu test está listo<br><br>"+
+
+"🔗 "+link+
+
+"<br><br>"+
+
+"<button onclick='shareTest(\""+link+"\")'>📤 Compartir test</button>"
+
+}
+
+function shareTest(link){
+
+if(navigator.share){
+
+navigator.share({
+title:"¿Cuánto me conoces?",
+text:"Haz mi test y mira si me conoces 😎",
+url:link
+})
+
+}else{
+
+alert("Copia este enlace y compártelo:\n"+link)
+
+}
+
+}
+
+let params=new URLSearchParams(location.search)
+
+if(params.get("test")){
+
+let data=JSON.parse(atob(params.get("test")))
+
+let index=0
+let respuestas=[]
+
+document.getElementById("app").innerHTML=`
+
+<h2>¿Cuánto conoces a ${data.creador}?</h2>
+
+<input id="player" placeholder="Tu nombre">
+
+<p id="q"></p>
+
+<input id="o1">
+<input id="o2">
+<input id="o3">
+
+<button onclick="resp()">Responder</button>
+
+<p id="final"></p>
+
+<div class="scoreboard">
+
+<h3>🏆 Ranking</h3>
+
+<ul id="ranking"></ul>
+
+</div>
+
+`
+
+function mostrarPregunta(){
+
+let q=data.preguntas[index]
+
+document.getElementById("q").innerText=q.q
+
+document.getElementById("o1").value=q.r[0]
+document.getElementById("o2").value=q.r[1]
+document.getElementById("o3").value=q.r[2]
+
+}
+
+window.resp=function(){
+
+let sel=prompt("Escribe 1, 2 o 3")
+
+respuestas.push(parseInt(sel)-1)
+
+index++
+
+if(index<data.preguntas.length){
+mostrarPregunta()
+}else{
+resultado()
+}
+
+}
+
+function resultado(){
+
+let puntos=0
+
+for(let i=0;i<data.preguntas.length;i++){
+if(respuestas[i]==data.preguntas[i].c) puntos++
+}
+
+document.getElementById("final").innerText="Puntuación: "+puntos+"/10"
+
+let scores=JSON.parse(localStorage.getItem("scores")||"[]")
+
+scores.push({nombre:player.value,puntos})
+
+localStorage.setItem("scores",JSON.stringify(scores))
+
+ranking()
+
+}
+
+function ranking(){
+
+let scores=JSON.parse(localStorage.getItem("scores")||"[]")
+
+scores.sort((a,b)=>b.puntos-a.puntos)
+
+let lista=document.getElementById("ranking")
+
+lista.innerHTML=""
+
+scores.slice(0,10).forEach(s=>{
+lista.innerHTML+="<li>"+s.nombre+" - "+s.puntos+"/10</li>"
+})
+
+}
+
+mostrarPregunta()
+ranking()
+
+}
+
+</script>
+
+</body>
+</html>
